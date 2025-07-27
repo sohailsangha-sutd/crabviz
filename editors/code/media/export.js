@@ -13,12 +13,46 @@ function exportSVG() {
   });
 }
 
+function exportCrabViz() {
+  const svg = document.querySelector("svg");
+  if (!svg) {
+    console.error("No SVG found to export.");
+    return;
+  }
+
+  const svgContent = svg.outerHTML.replaceAll("&nbsp;", "&#160;");
+  acquireVsCodeApi().postMessage({
+    command: 'saveSVG',
+    svg: svgContent
+  });
+}
+
+function saveJSON() {
+  const svg = document.querySelector("svg");
+  if (!svg) {
+    console.error("No SVG found to export.");
+    return;
+  }
+
+  const svgContent = svg.outerHTML.replaceAll("&nbsp;", "&#160;");
+  acquireVsCodeApi().postMessage({
+    command: 'saveJSON',
+    svg: svgContent
+  });
+}
+
 window.addEventListener('message', (e) => {
   const message = e.data;
 
   switch (message.command) {
     case 'exportSVG':
         exportSVG();
+        break;
+    case 'exportCrabViz':
+        exportCrabViz();
+        break;
+    case 'saveJSON':
+        saveJSON();
         break;
   }
 });

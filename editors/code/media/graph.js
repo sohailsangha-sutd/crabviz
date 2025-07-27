@@ -190,25 +190,35 @@ class CallGraph {
   /**
    * Deselect all elements
    */
-  reset() {
+  reset(resetFade = false) {
     this.nodes.forEach(node => {
       node.classList.remove("selected");
       forEachSelectedChild(node, "g.cell.selected", (elem) => {
         elem.classList.remove("selected");
       });
     });
-    this.edges.forEach(edge => edge.classList.remove("fade", "incoming", "outgoing", "selected"));
+    // this.edges.forEach(edge => edge.classList.remove("fase", "incoming", "outgoing", "selected"));
+    if (resetFade) {
+      this.edges.forEach(edge => edge.classList.remove("fade"));
+    }
+    this.edges.forEach(edge => edge.classList.remove("incoming", "outgoing", "selected"));
   };
 
   /**
    * @param {SVGGElement} edge
    */
   onSelectEdge(edge) {
-    this.edges.forEach(e => {
-      if (e !== edge) {
-        e.classList.add("fade");
-      }
-    });
+    if(edge.classList.contains("fade")){
+      edge.classList.remove("fade");
+    }else {
+      edge.classList.add("fade");
+    }
+
+    // this.edges.forEach(e => {
+    //   if (e !== edge) {
+    //     e.classList.add("fade");
+    //   }
+    // });
   };
 
   /**
