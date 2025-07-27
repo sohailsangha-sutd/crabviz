@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 import { initSync, set_panic_hook } from '../crabviz';
 import { CallGraphPanel } from './webview';
-import { CommandManager } from './command-manager';
+import { CommandManager } from './command_manager';
 
 export async function activate(context: vscode.ExtensionContext) {
 	await vscode.workspace.fs.readFile(
@@ -16,6 +16,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('crabviz.generateCallGraphFromConfig', manager.generateCallGraphFromConfig.bind(manager)),
+		vscode.commands.registerCommand('crabviz.createConfigTemplate', manager.createConfigTemplate.bind(manager)),
 		vscode.commands.registerCommand('crabviz.generateCallGraph', manager.generateCallGraph.bind(manager)),
 		vscode.commands.registerCommand('crabviz.loadSVG', manager.loadSVG.bind(manager)),
 		vscode.commands.registerTextEditorCommand('crabviz.generateFuncCallGraph', manager.generateFuncCallGraph.bind(manager)),

@@ -1,15 +1,15 @@
 {
-  "name": "crabviz",
-  "displayName": "Crabviz",
+  "name": "crabviz-obsidian",
+  "displayName": "Crabviz Obsidian",
   "description": "interactive call graph generator",
-  "version": "0.4.0",
-  "publisher": "chanhx",
+  "version": "0.1.0",
+  "publisher": "ssangha",
   "author": {
-    "name": "Chan HoCheung"
+    "name": "Sohail Sangha"
   },
   "icon": "media/icon.png",
   "repository": {
-    "url": "https://github.com/chanhx/crabviz"
+    "url": "https://github.com/sohailsangha-sutd/crabviz"
   },
   "engines": {
     "vscode": "^1.83.0"
@@ -50,6 +50,10 @@
         "title": "Crabviz: Generate Call Graph From Config"
       },
       {
+        "command": "crabviz.createConfigTemplate",
+        "title": "Crabviz: Create Config Template"
+      },
+      {
         "command": "crabviz.generateFuncCallGraph",
         "title": "Crabviz: Generate Function Call Graph"
       },
@@ -78,6 +82,10 @@
         },
         {
           "command": "crabviz.generateCallGraphFromConfig",
+          "when": "isWorkspaceTrusted"
+        },
+        {
+          "command": "crabviz.createConfigTemplate",
           "when": "isWorkspaceTrusted"
         },
         {

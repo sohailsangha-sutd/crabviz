@@ -28,3 +28,18 @@ Since Crabviz utilizes the capabilities of language servers under the hood, if y
     ![call graph for the selected function](https://raw.githubusercontent.com/chanhx/assets/1338d847dab6b82e05ad4007fd29a4bce5d0ff14/crabviz/code/call_graph_for_a_selected_function.gif)
 
     Right click on the function you want to analyze, and select `Crabviz: Generate Function Call Graph` in the context menu.
+
+## Building and Installing
+
+Use Run Configuration of VSCode to launch a debug version of the extension.
+
+To load local copy, use vsce
+
+`npm install vsce -g`
+
+`vsce package`
+
+## Usage
+
+Press `Ctrl + Shift + P` and type `crabviz` and create config template
+Then use command again to generate callgraph from config
