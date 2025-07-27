@@ -24,3 +24,18 @@ It is currently available on [VS Code](https://marketplace.visualstudio.com/item
 ## Credits
 
 Crabviz is inspired by [graphql-voyager](https://github.com/graphql-kit/graphql-voyager) and [go-callvis](https://github.com/ondrajz/go-callvis).
+
+## Install
+
+build the library with wasm-pack, install using `npm install wasm-pack`
+
+```terminal
+wasm-pack build --target web --features vscode
+```
+
+The results will be in `pkg` folder.
+
+Copy all files to `crabviz` folder in the editor/code/ folder
+
+Here, open editor/code in vscode and run/debug
+

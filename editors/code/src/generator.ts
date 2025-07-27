@@ -111,6 +111,7 @@ export class Generator {
     }
 
     const dot = this.inner.generate_dot_source();
+    // console.log(dot);
 
     return await viz.then(viz => viz.renderString(dot, renderOptions));
   }

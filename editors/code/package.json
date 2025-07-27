@@ -24,10 +24,30 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Settings Crabviz-Obsidian Extension",
+      "type": "object",
+      "properties": {
+        "crabviz.booleanExample": {
+          "type": "boolean",
+          "default": true,
+          "description": "Boolean Example"
+        },
+        "crabviz.obsidianCanvasSavePath": {
+          "type": "string",
+          "default": "C:\\Users\\sohai\\SynologyDrive\\ObsidianVaults\\Stuff\\ScratchPad\\crabvizOutput.canvas",
+          "description": "Obsidian Canvas Save Path"
+        }
+      }
+    },
     "commands": [
       {
         "command": "crabviz.generateCallGraph",
         "title": "Crabviz: Generate Call Graph"
+      },
+      {
+        "command": "crabviz.generateCallGraphFromConfig",
+        "title": "Crabviz: Generate Call Graph From Config"
       },
       {
         "command": "crabviz.generateFuncCallGraph",
@@ -35,7 +55,19 @@
       },
       {
         "command": "crabviz.exportCallGraph",
-        "title": "Export Call Graph"
+        "title": "CrabViz: Export As SVG"
+      },
+      {
+        "command": "crabviz.loadSVG",
+        "title": "CrabViz: Load SVG in Webview"
+      },
+      {
+        "command": "crabviz.exportCrabViz",
+        "title": "CrabViz: Save SVG with CrabViz Metadata"
+      },
+      {
+        "command": "crabviz.saveJSON",
+        "title": "CrabViz: Save JSON Metadata"
       }
     ],
     "menus": {
@@ -43,6 +75,10 @@
         {
           "command": "crabviz.generateCallGraph",
           "when": "never"
+        },
+        {
+          "command": "crabviz.generateCallGraphFromConfig",
+          "when": "isWorkspaceTrusted"
         },
         {
           "command": "crabviz.generateFuncCallGraph",
@@ -64,11 +100,23 @@
         {
           "command": "crabviz.generateCallGraph",
           "group": "crabviz"
+        },
+        {
+          "command": "crabviz.loadSVG",
+          "group": "crabviz"
         }
       ],
       "webview/context": [
         {
           "command": "crabviz.exportCallGraph",
+          "when": "webviewId == 'crabviz.callgraph'"
+        },
+        {
+          "command": "crabviz.exportCrabViz",
+          "when": "webviewId == 'crabviz.callgraph'"
+        },
+        {
+          "command": "crabviz.saveJSON",
           "when": "webviewId == 'crabviz.callgraph'"
         }
       ]
@@ -104,6 +152,7 @@
   },
   "dependencies": {
     "@viz-js/viz": "^3.4.0",
-    "ignore": "^5.3.0"
+    "ignore": "^5.3.0",
+    "xmldom": "^0.6.0"
   }
 }

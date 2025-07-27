@@ -15,11 +15,19 @@ export async function activate(context: vscode.ExtensionContext) {
 	let manager = new CommandManager(context);
 
 	context.subscriptions.push(
+		vscode.commands.registerCommand('crabviz.generateCallGraphFromConfig', manager.generateCallGraphFromConfig.bind(manager)),
 		vscode.commands.registerCommand('crabviz.generateCallGraph', manager.generateCallGraph.bind(manager)),
+		vscode.commands.registerCommand('crabviz.loadSVG', manager.loadSVG.bind(manager)),
 		vscode.commands.registerTextEditorCommand('crabviz.generateFuncCallGraph', manager.generateFuncCallGraph.bind(manager)),
 		vscode.commands.registerCommand('crabviz.exportCallGraph', () => {
 			CallGraphPanel.currentPanel?.exportSVG();
 		}),
+		vscode.commands.registerCommand('crabviz.exportCrabViz', () => {
+			CallGraphPanel.currentPanel?.exportCrabViz();
+		}),
+		vscode.commands.registerCommand('crabviz.saveJSON', () => {
+			CallGraphPanel.currentPanel?.exportJSON();
+		})
 	);
 }
 

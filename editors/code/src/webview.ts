@@ -13,7 +13,7 @@ export class CallGraphPanel {
 	public constructor(extensionUri: vscode.Uri) {
 		this._extensionUri = extensionUri;
 
-		const panel = vscode.window.createWebviewPanel(CallGraphPanel.viewType, `Crabviz #${CallGraphPanel.num}`, vscode.ViewColumn.One, {
+		const panel = vscode.window.createWebviewPanel(CallGraphPanel.viewType, `Crabviz Debug #${CallGraphPanel.num}`, vscode.ViewColumn.One, {
 			localResourceRoots: [
 				vscode.Uri.joinPath(this._extensionUri, 'media')
 			],
@@ -29,7 +29,9 @@ export class CallGraphPanel {
 				switch (message.command) {
 					case 'saveSVG':
 						this.saveSVG(message.svg);
-
+						break;
+					case 'saveJSON':
+						this.saveJSON(message.svg);
 						break;
 				}
 			},
@@ -95,14 +97,22 @@ export class CallGraphPanel {
 					<title>crabviz</title>
 			</head>
 			<body data-vscode-context='{ "preventDefaultContextMenuItems": true }'>
-					${svg}
+					<span class="main-container">
+						<span class="crabviz-title">Crabviz Debug #${CallGraphPanel.num - 1}</span>
+						<span>${svg}</span>
+						<span class="carbviz-toolbar">
+							<button id="exportSVG" class="crabviz-button">Export SVG</button>
+							<button id="exportCrabViz" class="crabviz-button">Export CrabViz</button>
+						</span>
+					</span>
+
 
 					<script nonce="${nonce}">
 						const graph = new CallGraph(document.querySelector("svg"), ${focusMode});
 						graph.activate();
 
 						panzoom(graph.svg, {
-							minZoom: 1,
+							minZoom: 0.5,
 							smoothScroll: false,
 							zoomDoubleClickSpeed: 1
 						});
@@ -114,6 +124,46 @@ export class CallGraphPanel {
 
 	public exportSVG() {
 		this._panel.webview.postMessage({ command: 'exportSVG' });
+	}
+
+	public exportCrabViz() {
+		this._panel.webview.postMessage({ command: 'exportCrabViz' });
+	}
+
+	public exportJSON(){
+		console.debug("Exporting JSON metadata");
+		this._panel.webview.postMessage({ command: 'saveJSON' });
+	}
+
+	saveJSON(svg: string) {
+		console.debug("Saving JSON metadata");
+		let json;
+		try{
+			json = JSON.parse(svg);
+		}catch (e) {
+			vscode.window.showErrorMessage(`Error parsing JSON: ${e}`);
+		}
+		
+		console.debug("Saving JSON metadata:", json);
+		const writeData = Buffer.from(JSON.stringify(json, null, 2), 'utf8');
+
+		vscode.window.showSaveDialog({
+			saveLabel: "export",
+			filters: { 'JSON': ['json'] },
+		}).then((fileUri) => {
+			if (fileUri) {
+				try {
+					vscode.workspace.fs.writeFile(fileUri, writeData)
+						.then(() => {
+							console.log("File Saved");
+						}, (err: any) => {
+							vscode.window.showErrorMessage(`Error on writing file: ${err}`);
+						});
+				} catch (err) {
+					vscode.window.showErrorMessage(`Error on writing file: ${err}`);
+				}
+			}
+		});
 	}
 
 	saveSVG(svg: string) {
