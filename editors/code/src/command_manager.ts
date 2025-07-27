@@ -23,6 +23,27 @@ export class CommandManager {
 		this.languages = getLanguages();
   }
 
+  public async createConfigTemplate() {
+	const config = {
+	  input_files: [{
+		filepath: '<full path to the file, use / instead of \\>',
+		canvas: { x: 0, y: 0 },
+	  }],
+	  output_file: '<full path to the output file>'
+	};
+
+	const configContent = JSON.stringify(config, null, 2);
+	const uri = await vscode.window.showSaveDialog({
+	  defaultUri: vscode.Uri.joinPath(this.context.extensionUri, 'crabviz_config.json'),
+	  filters: { 'JSON files': ['json'] },
+	});
+
+	if (uri) {
+	  await vscode.workspace.fs.writeFile(uri, Buffer.from(configContent, 'utf8'));
+	  vscode.window.showInformationMessage(`Config template saved to ${uri.path}`);
+	}
+  }
+
   public async generateCallGraphFromConfig() {
 	  const config_filename = 'crabviz_config.json';
 	  //search for crabviz_config.json in opened workspace
@@ -48,9 +69,9 @@ export class CommandManager {
 
 			  let selections: vscode.Uri[] = [];
 			  let canvasPositions: [string, number, number][] = [];
-			  for (const c of config) {
+			  for (const c of config.input_files) {
 				//create vscode.Uri from complete file path
-				  const fileUri = vscode.Uri.file(c.filepath);  
+				  const fileUri = vscode.Uri.file(c.filepath.replace('C:/', 'c:/'));  
 				  const filename = c.filepath.split('/').pop() || '';
 				  canvasPositions.push([filename, c.canvas.x, c.canvas.y]);
 				  selections.push(fileUri);
@@ -58,12 +79,12 @@ export class CommandManager {
 
 			  console.debug(`Selected files:`, selections);
 			  console.debug(`Canvas positions:`, canvasPositions);
-			  this.generateCallGraph(selections[0], selections, canvasPositions);
+			  this.generateCallGraph(selections[0], selections, canvasPositions, config.output_file);
 		  });
 	  });
   }
 
-  public async generateCallGraph(contextSelection: vscode.Uri, allSelections: vscode.Uri[], canvasPositions: [string, number, number][] = []) {
+  public async generateCallGraph(contextSelection: vscode.Uri, allSelections: vscode.Uri[], canvasPositions: [string, number, number][] = [], savePath: string = '') {
 		let cancelled = false;
 
 		// selecting no file is actually selecting the entire workspace
@@ -88,6 +109,7 @@ export class CommandManager {
 		for await (const uri of allSelections) {
 			if (!uri.path.startsWith(root.uri.path)) {
 				vscode.window.showErrorMessage("Can not generate call graph across multiple workspace folders");
+				console.debug(`Selected file ${uri.path} is not in the root workspace folder ${root.uri.path}`);
 				return;
 			}
 		}
@@ -143,11 +165,11 @@ export class CommandManager {
 			const panel = new CallGraphPanel(this.context.extensionUri);
 			panel.showCallGraph(svg, false);
 
-			const savePath = vscode.workspace.getConfiguration('crabviz').get('obsidianCanvasSavePath') as string | undefined;
-			if (!savePath) {
-				vscode.window.showErrorMessage("Obsidian Canvas save path is not configured. Please set 'crabviz.obsidianCanvasSavePath' in settings.");
-				return;
-			}
+			// const savePath = vscode.workspace.getConfiguration('crabviz').get('obsidianCanvasSavePath') as string | undefined;
+			// if (!savePath) {
+			// 	vscode.window.showErrorMessage("Obsidian Canvas save path is not configured. Please set 'crabviz.obsidianCanvasSavePath' in settings.");
+			// 	return;
+			// }
 			console.debug("Obsidian Canvas save path:", savePath);
 
 			//<g id=\"(.*?):(.*?)\"><a.*?>\n<path.*?\/>\n<text.*?>(.*?)<\/text>\n<\/a>\n<\/g>
@@ -331,7 +353,7 @@ export class CommandManager {
 								}
 								new_canvas_lines.push(canvas_lines[ln]);
 							}else if(canvas_lines[ln].includes(`"type":"text"`)){
-								if (canvas_lines[ln].includes("<a href=\\\"vscode://file")) {
+								if (canvas_lines[ln].includes("](vscode://file")) {
 									continue;
 								}
 								new_canvas_lines.push(canvas_lines[ln]);
@@ -352,9 +374,8 @@ export class CommandManager {
 				const node_padding = 20;
 				const group_padding = 20;
 				const group_width = node_width + 2 * group_padding;
-
+				const depth_padding = 30; // padding for depth indentation
 				
-
 				let file_x_offset = 0;
 				let file_y_offset = 0;
 				
@@ -379,7 +400,7 @@ export class CommandManager {
 							break;
 						}
 					}
-					let function_y_offset = file_y_offset - node_height - node_padding; // start above the file group
+					let function_y_offset = file_y_offset; // start above the file group
 					for(let function_index = 0; function_index < functions.length; function_index++) {					
 						const func = functions[function_index];
 						if (func.function_id === "default") {
@@ -390,30 +411,25 @@ export class CommandManager {
 						const canvas_id = generateAlphaNumericId(16);
 						func.canvas_id = canvas_id; // assign canvas id to function
 
-						if (func.function_depth === 0){
-							function_y_offset += (node_height + node_padding); // 20 is the padding between nodes
-						} else {
-							function_y_offset += (node_height); // 20 is the padding between nodes
-						}
 
 						canvas_nodes.push({
 							"id": canvas_id,
 							"type": "text",
-							"text": func.function_name + " <a href=\"" + "vscode://file" + file_uri + ":" + file_line + ":" + file_column + "\">" + filenames[file_index].file_name + "</a> ",
-							"x": file_x_offset + func.function_depth * 20, // indent based on depth
+							"text": `**${func.function_name}**\n[${file_line + ":" + file_column + " " + filenames[file_index].file_name}](vscode://file${file_uri + ":" + file_line + ":" + file_column})`,
+							"x": file_x_offset + (func.function_depth * depth_padding), // indent based on depth
 							"y": function_y_offset,
-							"width": node_width - (func.function_depth * 20), // reduce width based on depth
+							"width": node_width - (func.function_depth * depth_padding), // reduce width based on depth
 							"height": node_height,
 						});
+						function_y_offset += (node_height + node_padding); // 20 is the padding between nodes
 					}
-					function_y_offset += (node_height + node_padding); // 20 is the padding between nodes
 
 					canvas_nodes.push({
 						"id": generateAlphaNumericId(16),
 						"type": "group",
 						"label": filenames[file_index].file_name,
-						"x": -group_padding + file_x_offset,
-						"y": -group_padding + file_y_offset,
+						"x": (file_x_offset - group_padding),
+						"y": (file_y_offset - group_padding),
 						"width": group_width,
 						"height": (function_y_offset - file_y_offset) + group_padding, // 60 is the height of each node, 50 is the padding
 					});
